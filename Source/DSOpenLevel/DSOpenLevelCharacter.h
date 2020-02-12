@@ -6,6 +6,10 @@
 #include "GameFramework/Character.h"
 #include "DSOpenLevelCharacter.generated.h"
 
+const FString MapPath = TEXT("Maps/");
+const FString MapName = TEXT("MiniMap");
+const FString MapPakName = TEXT("MiniMap.pak");
+
 UCLASS(config=Game)
 class ADSOpenLevelCharacter : public ACharacter
 {
@@ -74,18 +78,18 @@ public:
 	void InitializeInputBindings();
 
 	//客户端异步解Pak(本地执行)
-	void ClientAsync_Mount_MapPak(const FString& MapName);
+	void ClientAsync_Mount_MapPak(const FString& _MapPakName);
 
 	//服务器异步解Pak(Server执行)
 	UFUNCTION(Server, unreliable, WithValidation)
-	void ServerAsync_Mount_MapPak(const FString& MapName);
+	void ServerAsync_Mount_MapPak(const FString& _MapPakName);
 
 	//客户端同步解Pak(本地执行)
-	void ClientSync_Mount_MapPak(const FString& MapName);
+	void ClientSync_Mount_MapPak(const FString& _MapPakName);
 
 	//服务器同步解Pak(Server执行)
 	UFUNCTION(Server, unreliable, WithValidation)
-	void ServerSync_Mount_MapPak(const FString& MapName);
+	void ServerSync_Mount_MapPak(const FString& _MapPakName);
 
 	void CreateAllChildren_Client();
 
@@ -93,7 +97,7 @@ public:
 
 	//测试server切换地图，非.pak文件
 	UFUNCTION(Exec)
-	void LoadMap()
+	void LoadLocalMap()
 	{
 		ServerChangeMap(TEXT("test"));
 	}
@@ -104,6 +108,24 @@ public:
 
 	UFUNCTION(Server, unreliable, WithValidation)
 	void ServerChangeMap(const FString& MapName);
+
+	UFUNCTION(Exec)
+	void UnpackClientMap()
+	{
+		ClientAsync_Mount_MapPak(MapPakName);
+	}
+
+	UFUNCTION(Exec)
+	void UnpackServerMap()
+	{
+		ServerAsync_Mount_MapPak(MapPakName);
+	}
+
+	UFUNCTION(Exec)
+	void LoadServerMap()
+	{
+		ServerChangeMap(MapName);
+	}
 
 	//客户端异步解包
 	UFUNCTION(Exec)
