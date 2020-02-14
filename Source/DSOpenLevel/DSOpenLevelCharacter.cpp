@@ -250,7 +250,7 @@ void ADSOpenLevelCharacter::Test()
 // 	//客户端连接DS
 // 	InitLevel();
 	//客户端解pak,以备Server调用
-	ClientSync_Mount_MapPak(MapPakName);
+	ClientAsync_Mount_MapPak(MapPakName);
 	UE_LOG(LogTemp, Log, TEXT("Client Mount MiniMap Finished!!"));
 	//服务器解pak
 	ServerAsync_Mount_MapPak(MapPakName);
