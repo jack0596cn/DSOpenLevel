@@ -23,7 +23,7 @@ public:
 
 	virtual void Init() override;
 
-	void MountAllPak();
+	void MountDSAllPak();
 
 	void ServerAsync_Mount_MapPak(const FString& _MapPakName);
 	void CreateAllChildren_Server();

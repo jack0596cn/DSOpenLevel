@@ -23,11 +23,18 @@ public:
 
 	virtual void BeginPlay() override;
 
-	UFUNCTION(Exec)
-	void LoadMapPakTestTest()
+	void MountAndServerChange(const FString& PakName)
 	{
-		ClientAsync_Mount_MapPak(TEXT("MiniMap.pak"));
-		ServerChangeMap(TEXT("MiniMap"));
+		MountMap(PakName);
+		LoadMap(PakName);
+	}
+	/*
+	 * 建议LoadMap之前必须先调用MountMap.表示想要切换的关卡pak已经Mount到了本地内存中。不然无法正常切换
+	 */
+	UFUNCTION(Exec)
+	void MountMap(const FString& PakName)
+	{
+		ClientAsync_Mount_MapPak(PakName);
 	}
 	/*
 	 * 客户端异步Mount .Pak到本地
@@ -36,12 +43,11 @@ public:
 	 */
 	void LoadMap(const FString& PakName)
 	{
-		ClientAsync_Mount_MapPak(PakName);
 		FString _Filename, _FileExtn;
 		PakName.Split(TEXT("."), &_Filename, &_FileExtn);
 		ServerChangeMap(_Filename);
 	}
-
+	
 	//客户端异步解Pak(本地执行)
 	void ClientAsync_Mount_MapPak(const FString& _MapPakName);
 	void CreateAllChildren_Client();
