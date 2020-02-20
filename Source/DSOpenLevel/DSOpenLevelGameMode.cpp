@@ -2,6 +2,7 @@
 
 #include "DSOpenLevelGameMode.h"
 #include "DSOpenLevelCharacter.h"
+#include "MyPlayerController.h"
 #include "UObject/ConstructorHelpers.h"
 
 ADSOpenLevelGameMode::ADSOpenLevelGameMode()
@@ -11,5 +12,6 @@ ADSOpenLevelGameMode::ADSOpenLevelGameMode()
 	if (PlayerPawnBPClass.Class != NULL)
 	{
 		DefaultPawnClass = PlayerPawnBPClass.Class;
+		PlayerControllerClass = AMyPlayerController::StaticClass();
 	}
 }

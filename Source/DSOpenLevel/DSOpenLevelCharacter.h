@@ -6,7 +6,9 @@
 #include "GameFramework/Character.h"
 #include "DSOpenLevelCharacter.generated.h"
 
-const FString MapPath = TEXT("Maps/");
+#define MAP_ROOT_PATH TEXT("Maps")
+
+//const FString MapPath = TEXT("Maps/");
 const FString MapName = TEXT("MiniMap");
 const FString MapPakName = TEXT("MiniMap.pak");
 
@@ -97,9 +99,15 @@ public:
 
 	//测试server切换地图，非.pak文件
 	UFUNCTION(Exec)
-	void LoadLocalMap()
+	void LoadLocalMapTest()
 	{
 		ServerChangeMap(TEXT("test"));
+	}
+
+	UFUNCTION(Exec)
+	void LoadLocalMap()
+	{
+		ServerChangeMap(MapName);
 	}
 
 	UFUNCTION(Exec)

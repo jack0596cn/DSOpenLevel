@@ -179,7 +179,7 @@ bool ADSOpenLevelCharacter::ServerSync_Mount_MapPak_Validate(const FString& _Map
 
 void ADSOpenLevelCharacter::ServerSync_Mount_MapPak_Implementation(const FString& _MapPakName)
 {
-	FString SaveContentDir = FPaths::Combine(FPaths::ProjectContentDir(), MapPath, MapName, _MapPakName);
+	FString SaveContentDir = FPaths::Combine(FPaths::ProjectContentDir(), MAP_ROOT_PATH, MapName, _MapPakName);
 	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
 
 	FPakPlatformFile* PakPlatformFile = new FPakPlatformFile();
@@ -188,7 +188,7 @@ void ADSOpenLevelCharacter::ServerSync_Mount_MapPak_Implementation(const FString
 
 	FPakFile PakFile(&PlatformFile, *SaveContentDir, false);
 	//FString MountPoint(FPaths::ProjectContentDir() + TEXT("DLC/"));
-	FString MountPoint(FPaths::Combine(FPaths::ProjectContentDir(), MapPath, MapName));
+	FString MountPoint(FPaths::Combine(FPaths::ProjectContentDir(), MAP_ROOT_PATH, MapName));
 	PakFile.SetMountPoint(*MountPoint);
 
 	if (PakPlatformFile->Mount(*SaveContentDir, 0, *MountPoint))
@@ -206,7 +206,7 @@ void ADSOpenLevelCharacter::ServerSync_Mount_MapPak_Implementation(const FString
 
 			if (FileExtn == TEXT("umap"))
 			{
-				AssetName = FPaths::Combine(TEXT("/Game"), MapPath, MapName, LeftStr + TEXT(".") + LeftStr);
+				AssetName = FPaths::Combine(TEXT("/Game"), MAP_ROOT_PATH, MapName, LeftStr + TEXT(".") + LeftStr);
 				//AssetName = FPaths::Combine(TEXT("/Game"), MapPath, _MapPakName);
 				//AssetName = TEXT("/Game/DLC/") + LeftStr + TEXT(".") + LeftStr;
 				FStringAssetReference reference = AssetName;
@@ -264,7 +264,7 @@ void ADSOpenLevelCharacter::Test()
 void ADSOpenLevelCharacter::ClientSync_Mount_MapPak(const FString& _MapPakName)
 {	
 
-	FString SaveContentDir = FPaths::Combine(FPaths::ProjectContentDir(), MapPath, MapName, _MapPakName);
+	FString SaveContentDir = FPaths::Combine(FPaths::ProjectContentDir(), MAP_ROOT_PATH, MapName, _MapPakName);
 	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
 
 	FPakPlatformFile* PakPlatformFile = new FPakPlatformFile();
@@ -273,7 +273,7 @@ void ADSOpenLevelCharacter::ClientSync_Mount_MapPak(const FString& _MapPakName)
 
 	FPakFile PakFile(&PlatformFile, *SaveContentDir, false);
 	//FString MountPoint(FPaths::ProjectContentDir() + TEXT("DLC/"));
-	FString MountPoint(FPaths::Combine(FPaths::ProjectContentDir(), MapPath, MapName));
+	FString MountPoint(FPaths::Combine(FPaths::ProjectContentDir(), MAP_ROOT_PATH, MapName));
 	PakFile.SetMountPoint(*MountPoint);
 
 	if (PakPlatformFile->Mount(*SaveContentDir, 0, *MountPoint))
@@ -291,7 +291,7 @@ void ADSOpenLevelCharacter::ClientSync_Mount_MapPak(const FString& _MapPakName)
 
 			if (FileExtn == TEXT("umap"))
 			{
-				AssetName = FPaths::Combine(TEXT("/Game"), MapPath, MapName, LeftStr + TEXT(".") + LeftStr);
+				AssetName = FPaths::Combine(TEXT("/Game"), MAP_ROOT_PATH, MapName, LeftStr + TEXT(".") + LeftStr);
 				//AssetName = FPaths::Combine(TEXT("/Game"), MapPath, _MapPakName);
 				//AssetName = TEXT("/Game/DLC/") + LeftStr + TEXT(".") + LeftStr;
 				FStringAssetReference reference = AssetName;
@@ -337,10 +337,10 @@ void ADSOpenLevelCharacter::ClientAsync_Mount_MapPak(const FString& _MapPakName)
 
 	//const FString PakFileFullName = TEXT("F:\\test_unreal\PakTest\Content\DLC\MiniMap.pak");
 	//const FString PakFileFullName = FPaths::ProjectContentDir() + TEXT("ThirdPersonCPP/Maps") + _MapPakName;
-	const FString PakFileFullName = FPaths::Combine(FPaths::ProjectContentDir(), MapPath, MapName, _MapPakName)/* FPaths::ProjectContentDir() + TEXT("ThirdPersonCPP/Maps") + _MapPakName*/;
+	const FString PakFileFullName = FPaths::Combine(FPaths::ProjectContentDir(), MAP_ROOT_PATH, MapName, _MapPakName)/* FPaths::ProjectContentDir() + TEXT("ThirdPersonCPP/Maps") + _MapPakName*/;
 
 	//测试用MountPoint
-	FString MountPoint(FPaths::Combine(FPaths::ProjectContentDir(), MapPath, MapName, TEXT("/")));
+	FString MountPoint(FPaths::Combine(FPaths::ProjectContentDir(), MAP_ROOT_PATH, MapName, TEXT("/")));
 	//FString MountPoint(FPaths::ProjectContentDir() + TEXT("DLC/")/*FPaths::EngineContentDir()*/);
 
 	//创建FPakFile对象,同样使用相应平台的PlatformFile初始化
@@ -353,8 +353,18 @@ void ADSOpenLevelCharacter::ClientAsync_Mount_MapPak(const FString& _MapPakName)
 		//具体Mount方法可以参考函数 FPakPlatformFile::Mount
 		//但是其中有大量多余内容(例如版本编号处理)
 		//Pak->SetMountPoint(*MountPoint);
+		TArray<FString> PakFilenames;
+		PakPlatformFile->GetMountedPakFilenames(PakFilenames);
 
-		PakPlatformFile->Mount(*PakFileFullName, 1000, *MountPoint);
+		bool bRet = PakPlatformFile->Mount(*PakFileFullName, 1000, *MountPoint);
+		if (bRet)
+		{
+			UE_LOG(LogTemp, Log, TEXT("Mount Success..."))
+		}
+		else
+		{
+			UE_LOG(LogTemp, Log, TEXT("Mount Failed..."))
+		}
 
 		TArray<FString> Files;
 		Pak->FindFilesAtPath(Files, *(Pak->GetMountPoint()), true, false, true);
@@ -373,7 +383,7 @@ void ADSOpenLevelCharacter::ClientAsync_Mount_MapPak(const FString& _MapPakName)
 			{
 				//File = FileOnly.Replace(TEXT("uasset"), *Filename);
 				//File = TEXT("/Game/DLC/") + File;
-				File = FPaths::Combine(TEXT("/Game"), MapPath, MapName, Filename + TEXT(".") + Filename);
+				File = FPaths::Combine(TEXT("/Game"), MAP_ROOT_PATH, MapName, Filename + TEXT(".") + Filename);
 				//File = TEXT("/Game/DLC/") + Filename + TEXT(".") + Filename;
 				//File = TEXT("/Game/DLC/") + Filename + TEXT(".") + Filename;
 				ObjectPaths.AddUnique(FSoftObjectPath(File));
@@ -400,7 +410,7 @@ void ADSOpenLevelCharacter::CreateAllChildren_Client()
 			FString ShortMapName = FPackageName::GetShortName(_MapPath);
 			FString _MapName, FileExtn;
 			ShortMapName.Split(TEXT("."), &_MapName, &FileExtn);
-			UGameplayStatics::OpenLevel(GWorld, *_MapName);
+			//UGameplayStatics::OpenLevel(GWorld, *_MapName);
 			UE_LOG(LogTemp, Log, TEXT("Object Load Success..."))
 		}
 		else
@@ -450,10 +460,10 @@ void ADSOpenLevelCharacter::ServerAsync_Mount_MapPak_Implementation(const FStrin
 
 	//const FString PakFileFullName = TEXT("F:\\test_unreal\PakTest\Content\DLC\MiniMap.pak");
 	//const FString PakFileFullName = FPaths::ProjectContentDir() + TEXT("ThirdPersonCPP/Maps") + _MapPakName;
-	const FString PakFileFullName = FPaths::Combine(FPaths::ProjectContentDir(),MapPath,MapName,_MapPakName)/* FPaths::ProjectContentDir() + TEXT("ThirdPersonCPP/Maps") + _MapPakName*/;
+	const FString PakFileFullName = FPaths::Combine(FPaths::ProjectContentDir(), MAP_ROOT_PATH,MapName,_MapPakName)/* FPaths::ProjectContentDir() + TEXT("ThirdPersonCPP/Maps") + _MapPakName*/;
 
 	//测试用MountPoint
-	FString MountPoint(FPaths::Combine(FPaths::ProjectContentDir(), MapPath, MapName, TEXT("/")));
+	FString MountPoint(FPaths::Combine(FPaths::ProjectContentDir(), MAP_ROOT_PATH, MapName, TEXT("/")));
 	//FString MountPoint(FPaths::ProjectContentDir() + TEXT("DLC/")/*FPaths::EngineContentDir()*/);
 
 	//创建FPakFile对象,同样使用相应平台的PlatformFile初始化
@@ -486,7 +496,7 @@ void ADSOpenLevelCharacter::ServerAsync_Mount_MapPak_Implementation(const FStrin
 			{
 				//File = FileOnly.Replace(TEXT("uasset"), *Filename);
 				//File = TEXT("/Game/DLC/") + File;
-				File = FPaths::Combine(TEXT("/Game"), MapPath, MapName, Filename + TEXT(".") + Filename);
+				File = FPaths::Combine(TEXT("/Game"), MAP_ROOT_PATH, MapName, Filename + TEXT(".") + Filename);
 				//File = TEXT("/Game/DLC/") + Filename + TEXT(".") + Filename;
 				//File = TEXT("/Game/DLC/") + Filename + TEXT(".") + Filename;
 				ObjectPaths.AddUnique(FSoftObjectPath(File));
@@ -513,8 +523,7 @@ void ADSOpenLevelCharacter::CreateAllChildren_Server()
 			FString ShortMapName = FPackageName::GetShortName(_MapPath);
 			FString _MapName, FileExtn;
 			ShortMapName.Split(TEXT("."), &_MapName, &FileExtn);
-
-			ServerChangeMap(_MapName);
+			//ServerChangeMap(_MapName);
 			UE_LOG(LogTemp, Log, TEXT("Object Load Success..."))
 		}
 		else
