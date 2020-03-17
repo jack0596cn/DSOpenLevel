@@ -23,22 +23,11 @@ public:
 
 	virtual void Init() override;
 
-	void MountDSAllPak();
-
-	void ServerAsync_Mount_MapPak(const FString& _MapPakName);
-	void CreateAllChildren_Server();
-	
-	void InitMountListDS();
-
 	FPakPlatformFile* GetClientPakPlatformFile()
 	{
 		return ClientPakPlatformFile;
 	}
 
 private:
-	TArray<FSoftObjectPath> ObjectPaths;
-	TArray<TSoftObjectPtr<UObject>> ObjectPtrs;
-	TArray<FString> PakList;
-
 	FPakPlatformFile* ClientPakPlatformFile;
 };

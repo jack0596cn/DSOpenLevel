@@ -9,7 +9,13 @@
 #include "Engine/AssetManager.h"
 #include "Engine/StreamableManager.h"
 #include "DSOpenLevelCharacter.h"
+#include "Engine/AssetManager.h"
+#include "Kismet/GameplayStatics.h"
+#include "PlatformFilemanager.h"
+#include "IPlatformFilePak.h"
 #include "MyPlayerController.generated.h"
+
+#define MAP_ROOT_PATH TEXT("Maps")
 
 /**
  * 
@@ -23,52 +29,24 @@ public:
 
 	virtual void BeginPlay() override;
 
-	void MountAndServerChange(const FString& PakName)
-	{
-		MountMap(PakName);
-		LoadMap(PakName);
-	}
-	/*
-	 * 建议LoadMap之前必须先调用MountMap.表示想要切换的关卡pak已经Mount到了本地内存中。不然无法正常切换
-	 */
+	//客户端异步解Pak(本地执行)，调试的时候直接在控制台调用ClientAsync_Mount_MapPak
 	UFUNCTION(Exec)
-	void MountMap(const FString& PakName)
-	{
-		ClientAsync_Mount_MapPak(PakName);
-	}
-	/*
-	 * 客户端异步Mount .Pak到本地
-	 * @ PakName带后缀的地图Pak
-	 * 格式类似：TEXT("MiniMap.pak")
-	 */
-	void LoadMap(const FString& PakName)
-	{
-		FString _Filename, _FileExtn;
-		PakName.Split(TEXT("."), &_Filename, &_FileExtn);
-		ServerChangeMap(_Filename);
-	}
-	
-	//客户端异步解Pak(本地执行)
 	void ClientAsync_Mount_MapPak(const FString& _MapPakName);
 	void CreateAllChildren_Client();
 
-	FORCEINLINE void Clear()
-	{
-		ObjectPaths.Empty();
-		ObjectPtrs.Empty();
-	}
-	/*
-	 * 通知DS切换地图
-	 */
-	UFUNCTION(Server, unreliable, WithValidation)
-	void ServerChangeMap(const FString& MapName);
+	//服务器异步解Pak(Server执行)
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerAsync_Mount_MapPak(const FString& _MapPakName);
+	void CreateAllChildren_Server();
 
-	/*
-	 * 遍历客户端所有地图Pak并Mount
-	 */
-	void InitMountAllMapPak();
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerChangeMap(const FString& _MapName);
 
 private:
+	//pak文件中的文件路径列表
 	TArray<FSoftObjectPath> ObjectPaths;
 	TArray<TSoftObjectPtr<UObject>> ObjectPtrs;
+
+	TArray<FSoftObjectPath> Server_ObjectPaths;
+	TArray<TSoftObjectPtr<UObject>> Server_ObjectPtrs;
 };
