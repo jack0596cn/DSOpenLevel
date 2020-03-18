@@ -16,6 +16,7 @@
 #include "MyPlayerController.generated.h"
 
 #define MAP_ROOT_PATH TEXT("Maps")
+#define COMP_ROOT_PATH TEXT("Comps")
 
 /**
  * 
@@ -41,6 +42,9 @@ public:
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerChangeMap(const FString& _MapName);
+
+	UFUNCTION(Exec)
+	void LoadCompBP(const FString& _ComPakName);
 
 private:
 	//pak文件中的文件路径列表

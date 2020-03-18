@@ -4,6 +4,7 @@
 #include "MyPlayerController.h"
 #include "MyGameInstance.h"
 #include "FileHelper.h"
+#include "MyActorComponent.h"
 
 AMyPlayerController::AMyPlayerController(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -166,4 +167,79 @@ bool AMyPlayerController::ServerChangeMap_Validate(const FString& _MapName)
 void AMyPlayerController::ServerChangeMap_Implementation(const FString& _MapName)
 {
 	GWorld->ServerTravel(_MapName);
+}
+
+void AMyPlayerController::LoadCompBP(const FString& _ComPakName)
+{
+	UMyGameInstance* MyInstance = Cast<UMyGameInstance>(GetGameInstance());
+	FPakPlatformFile* PakPlatformFile = nullptr;
+
+	if (MyInstance)
+	{
+		PakPlatformFile = MyInstance->GetClientPakPlatformFile();
+		TArray<FString> PakFilenames;
+		if (PakPlatformFile)
+		{
+			PakPlatformFile->GetMountedPakFilenames(PakFilenames);
+			if (PakFilenames.Num() > 0)
+			{
+				for (auto fileList : PakFilenames)
+				{
+					FString ShortMapName = FPackageName::GetShortName(fileList);
+					if (ShortMapName.Equals(_ComPakName))
+					{
+						UE_LOG(LogTemp, Log, TEXT("%s File Has Mounted!!"), *ShortMapName);
+						return;
+					}
+				}
+			}
+		}
+	}
+
+	FString PakForlderName, FileExtn;
+	_ComPakName.Split(TEXT("."), &PakForlderName, &FileExtn);
+
+	const FString SaveContentDir = FPaths::Combine(FPaths::ProjectContentDir(), COMP_ROOT_PATH, PakForlderName, _ComPakName);
+	FString MountPoint(FPaths::Combine(FPaths::ProjectContentDir(), COMP_ROOT_PATH, PakForlderName, TEXT("/")));
+
+	FPakFile* Pak = new FPakFile(&FPlatformFileManager::Get().GetPlatformFile(), *SaveContentDir, false);
+
+	if (Pak->IsValid())
+	{
+		bool bRet = PakPlatformFile->Mount(*SaveContentDir, 1000, *MountPoint);
+		if (bRet)
+		{
+			UE_LOG(LogTemp, Log, TEXT("Mount Component Success..."))
+		}
+		else
+		{
+			UE_LOG(LogTemp, Log, TEXT("Mount Component Failed..."))
+		}
+
+		TArray<FString> FileList;
+		Pak->FindFilesAtPath(FileList, *(Pak->GetMountPoint()), true, false, true);
+
+		for (auto File : FileList)
+		{
+			FString AssetShortName = FPackageName::GetShortName(File);
+			FString LeftStr, RightStr;
+			AssetShortName.Split(TEXT("."), &LeftStr, &RightStr);
+			if (RightStr == TEXT("uasset"))
+			{
+				FString AssetName = FPaths::Combine(TEXT("/Game"), COMP_ROOT_PATH, PakForlderName, LeftStr + TEXT(".") + LeftStr);
+				TSubclassOf<UMyActorComponent> ActorComClass = LoadClass<UMyActorComponent>(nullptr, *(AssetName + TEXT("_C")), nullptr);
+				ADSOpenLevelCharacter* Cha = Cast<ADSOpenLevelCharacter>(GetCharacter());
+
+				if (ActorComClass != nullptr)
+				{
+					UActorComponent* ActorCom = NewObject<UActorComponent>(Cha, ActorComClass);
+					if (ActorCom)
+					{
+						Cha->AddOwnedComponent(ActorCom);
+						ActorCom->RegisterComponent();
+					}
+				}
+			}
+		}
+	}
 }
